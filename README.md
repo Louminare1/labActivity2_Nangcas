@@ -1,46 +1,62 @@
-# DFA String Acceptance Checker
+# NFA String Acceptance Checker
 
 ## Purpose
-This program implements a **Deterministic Finite Automaton (DFA)** that checks whether a binary string (containing only 0s and 1s) ends with **"01"**.
+This program implements a **Non-deterministic Finite Automaton (NFA)** that checks whether a string contains **"ab"** as a substring.
 
-A DFA is a theoretical model of computation that processes strings symbol by symbol and determines if they belong to a specific language. In this case, our language is "all binary strings that end with 01".
+An NFA is similar to a DFA but can have multiple possible next states for the same input symbol. This program explores all possible state transitions simultaneously to determine if the input string is accepted.
 
 ---
 
-## DFA States and Transitions
+## NFA States and Transitions
 
 ### States:
-- **q0**: Start state (also represents strings that don't end with 0 or 01)
-- **q1**: We've seen a 0 (waiting for 1 to complete "01")
-- **q2**: Accept state (string ends with "01")
+- **q0**: Start state (haven't found "ab" yet, can loop on any character)
+- **q1**: Just seen 'a' (waiting for 'b' to complete "ab")
+- **q2**: Accept state (found "ab" substring, stay here for rest of input)
 
 ### Alphabet:
-- `{0, 1}` - The program only accepts binary strings
+- `{a, b}` - The program accepts strings with 'a' and 'b'
 
 ### Language:
-- All strings that end with "01"
-- Examples: `01`, `101`, `1101`, `0001`, `1001`
+- All strings that contain "ab" as a substring
+- Examples: `ab`, `aab`, `aba`, `bab`, `abab`
 
 ### Transition Table:
 
-| Current State | Input (0) | Input (1) |
+| Current State | Input 'a' | Input 'b' |
 |---------------|-----------|-----------|
-| q0 (start)    | → q1      | → q0      |
-| q1            | → q1      | → q2      |
-| q2 (accept)   | → q1      | → q0      |
+| q0 (start)    | q0, q1    | q0        |
+| q1            | -         | q2        |
+| q2 (accept)   | q2        | q2        |
 
 ### Explanation of Transitions:
 - **From q0**: 
-  - If we read `0`, move to q1 (we might be starting "01")
-  - If we read `1`, stay in q0 (string doesn't end with 0)
+  - On 'a': Go to both q0 (continue searching) AND q1 (start of potential "ab")
+  - On 'b': Stay in q0 (keep searching)
 
 - **From q1**: 
-  - If we read `0`, stay in q1 (keep the most recent 0)
-  - If we read `1`, move to q2 (we completed "01"!)
+  - On 'a': No transition (dead end for this path)
+  - On 'b': Move to q2 (found "ab"!)
 
 - **From q2**: 
-  - If we read `0`, move to q1 (new potential "01" pattern)
-  - If we read `1`, move to q0 (pattern broken)
+  - On 'a' or 'b': Stay in q2 (already found "ab", accept everything after)
+
+---
+
+## Key Differences: NFA vs DFA
+
+### NFA Features:
+- ✅ **Multiple transitions** for the same input from one state
+- ✅ **Non-deterministic** - can be in multiple states at once
+- ✅ **Explores all paths** simultaneously using sets
+- ✅ **Simpler design** for certain patterns (like substring matching)
+
+### How This NFA Works:
+The program tracks **all possible states** at each step:
+1. Start with state set: `{q0}`
+2. For each input symbol, compute ALL possible next states
+3. Continue with the new set of states
+4. Accept if ANY final state is q2
 
 ---
 
@@ -51,60 +67,171 @@ A DFA is a theoretical model of computation that processes strings symbol by sym
 - A terminal or command prompt
 
 ### Step 1: Compile the Program
-Open your terminal/command prompt and navigate to the folder containing `labActivity1_Nangcas.java`, then run:
+Open your terminal/command prompt and navigate to the folder containing `NFAStringChecker.java`, then run:
 
 ```bash
-javac labActivity1_Nangcas.java
+javac NFAStringChecker.java
 ```
 
-This will create a `labActivity1_Nangcas.class` file.
+This will create a `NFAStringChecker.class` file.
 
 ### Step 2: Run the Program
 After compiling, run the program with:
 
 ```bash
-java labActivity1_Nangcas
+java NFAStringChecker
 ```
 
 ### Step 3: Enter Input
-The program will ask you to enter a binary string. Type your string and press Enter.
+The program will ask you to enter a string. Type your string (only 'a' and 'b') and press Enter.
 
 ---
 
 ## Example Input/Output
 
-### Example 1: String Ending with "01" (Accepted)
-**Input:** `1101`  
+### Example 1: String Containing "ab" (Accepted)
+**Input:** `aab`  
 **Output:** `Accepted`
 
-![Example 1 - Accepted](https://raw.githubusercontent.com/Louminare1/labActivity1_Nangcas/main/image.png)
+```
+=== NFA String Acceptance Checker ===
+Enter a string: aab
+
+--- NFA Simulation ---
+Starting states: [q0]
+Read 'a' -> Current states: [q0, q1]
+Read 'a' -> Current states: [q0, q1]
+Read 'b' -> Current states: [q0, q2]
+Final states: [q0, q2]
+
+Output: Accepted
+```
+
+**Explanation:** The string contains "ab" (at positions 1-2), so it's accepted.
 
 ---
 
-### Example 2: String NOT Ending with "01" (Rejected)
-**Input:** `1110`  
+### Example 2: String NOT Containing "ab" (Rejected)
+**Input:** `bbaa`  
 **Output:** `Rejected`
 
-![Example 2 - Rejected](https://raw.githubusercontent.com/Louminare1/labActivity1_Nangcas/main/image-1.png)
+```
+=== NFA String Acceptance Checker ===
+Enter a string: bbaa
+
+--- NFA Simulation ---
+Starting states: [q0]
+Read 'b' -> Current states: [q0]
+Read 'b' -> Current states: [q0]
+Read 'a' -> Current states: [q0, q1]
+Read 'a' -> Current states: [q0, q1]
+Final states: [q0, q1]
+
+Output: Rejected
+```
+
+**Explanation:** The string never forms "ab" substring, so it's rejected.
 
 ---
 
-### Example 3: Simple "01" Pattern (Accepted)
-**Input:** `01`  
+### Example 3: Simple "ab" Pattern (Accepted)
+**Input:** `ab`  
 **Output:** `Accepted`
 
-![Example 3 - Simple Pattern](https://raw.githubusercontent.com/Louminare1/labActivity1_Nangcas/main/image-2.png)
+```
+=== NFA String Acceptance Checker ===
+Enter a string: ab
+
+--- NFA Simulation ---
+Starting states: [q0]
+Read 'a' -> Current states: [q0, q1]
+Read 'b' -> Current states: [q0, q2]
+Final states: [q0, q2]
+
+Output: Accepted
+```
 
 ---
 
-### Example 4: Multiple "01" Patterns (Accepted)
-**Input:** `10101`  
+### Example 4: "ab" in the Middle (Accepted)
+**Input:** `babb`  
 **Output:** `Accepted`
 
-![Example 4 - Multiple Patterns](https://raw.githubusercontent.com/Louminare1/labActivity1_Nangcas/main/image-3.png)
+```
+=== NFA String Acceptance Checker ===
+Enter a string: babb
+
+--- NFA Simulation ---
+Starting states: [q0]
+Read 'b' -> Current states: [q0]
+Read 'a' -> Current states: [q0, q1]
+Read 'b' -> Current states: [q0, q2]
+Read 'b' -> Current states: [q0, q2]
+Final states: [q0, q2]
+
+Output: Accepted
+```
+
+---
+
+## 📊 More Test Cases
+
+| Input | Contains "ab"? | Output |
+|-------|----------------|--------|
+| `ab` | Yes | Accepted ✅ |
+| `aab` | Yes | Accepted ✅ |
+| `aba` | Yes | Accepted ✅ |
+| `bab` | Yes | Accepted ✅ |
+| `abab` | Yes | Accepted ✅ |
+| `ba` | No | Rejected ❌ |
+| `bba` | No | Rejected ❌ |
+| `bbaa` | No | Rejected ❌ |
+| `aaa` | No | Rejected ❌ |
+| `bbb` | No | Rejected ❌ |
+
+---
+
+## Program Features
+- ✅ Validates input (ensures only 'a' and 'b' characters)
+- ✅ Uses Map and Set for NFA state representation
+- ✅ Explores multiple states simultaneously
+- ✅ Shows step-by-step state transitions
+- ✅ Clear and educational output
+
+---
+
+## Understanding the Code
+
+### Data Structure:
+```java
+Map<String, Map<Character, Set<String>>> nfa
+```
+- **Outer Map**: Current state → Transitions
+- **Inner Map**: Input symbol → Set of next states
+- **Set**: Multiple possible next states (NFA's non-determinism)
+
+### Algorithm:
+1. Maintain a **Set of current states**
+2. For each input symbol:
+   - For each state in current set
+   - Find all possible next states
+   - Union them into new current set
+3. Accept if q2 is in final set
+
+---
+
+## Learning Notes
+This program demonstrates:
+- **NFA concepts** (non-determinism, multiple transitions)
+- **Set operations** (union, contains)
+- **HashMap usage** (nested maps for state transitions)
+- **Collections framework** (HashSet, HashMap, Arrays.asList)
+- **State space exploration** (tracking multiple possibilities)
+
+Perfect for learning about non-deterministic automata and advanced Java data structures! 🎓
 
 ---
 
 **Author**: Angelou A. Nangcas  
-**Course**: Computer Science 
+**Course**: Theory of Computation  
 **Date**: November 3, 2025
